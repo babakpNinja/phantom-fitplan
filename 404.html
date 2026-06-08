@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>👻 Phantom FitPlan — Interactive Weight-Loss Program</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0f1020; --card:#1b1c33; --card2:#23254a; --accent:#7c5cff; --accent2:#22d3a6;
+    --text:#eef0ff; --muted:#a6a9c8; --warn:#ffb020; --danger:#ff5d6c; --ok:#22d3a6;
+    --shadow:0 10px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;background:
+    radial-gradient(1200px 600px at 10% -10%, #2a1c5a 0%, transparent 60%),
+    radial-gradient(1000px 500px at 110% 10%, #143b3a 0%, transparent 55%), var(--bg);
+    color:var(--text);min-height:100vh;}
+  header{padding:28px 20px 10px;text-align:center}
+  header h1{margin:0;font-size:clamp(26px,5vw,42px);letter-spacing:.5px}
+  header p{color:var(--muted);margin:8px 0 0;font-size:15px}
+  .wrap{max-width:1180px;margin:0 auto;padding:16px 18px 60px}
+  .grid{display:grid;grid-template-columns:340px 1fr;gap:22px}
+  @media(max-width:900px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid #2c2e55;border-radius:18px;padding:20px;box-shadow:var(--shadow)}
+  .card h2{margin:0 0 14px;font-size:18px;display:flex;align-items:center;gap:8px}
+  label{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px}
+  input,select{width:100%;padding:11px 12px;border-radius:11px;border:1px solid #3a3d6e;background:var(--card2);color:var(--text);font-size:15px;outline:none}
+  input:focus,select:focus{border-color:var(--accent)}
+  .row{display:flex;gap:10px}.row>div{flex:1}
+  .seg{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .seg button{flex:1;min-width:62px;padding:12px 6px;border-radius:12px;border:1px solid #3a3d6e;background:var(--card2);color:var(--text);cursor:pointer;font-weight:600;transition:.15s}
+  .seg button.active{background:linear-gradient(135deg,var(--accent),#a07bff);border-color:transparent;box-shadow:0 6px 18px rgba(124,92,255,.45)}
+  .seg button:hover{border-color:var(--accent)}
+  .pill{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:18px}
+  .stat{background:linear-gradient(135deg,var(--card2),#1c1e3d);border:1px solid #313466;border-radius:16px;padding:16px;text-align:center}
+  .stat .n{font-size:30px;font-weight:800;line-height:1}
+  .stat .l{font-size:12px;color:var(--muted);margin-top:6px;text-transform:uppercase;letter-spacing:.5px}
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:8px 0 6px}
+  @media(max-width:760px){.charts{grid-template-columns:1fr}}
+  .chartbox{background:var(--card2);border-radius:16px;padding:14px;border:1px solid #313466}
+  .chartbox h3{margin:0 0 8px;font-size:14px;color:var(--muted);font-weight:600;text-align:center}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 12px}
+  .tabs button{padding:9px 16px;border-radius:999px;border:1px solid #3a3d6e;background:var(--card2);color:var(--text);cursor:pointer;font-weight:600}
+  .tabs button.active{background:var(--accent2);color:#04231c;border-color:transparent}
+  .week{border:1px solid #313466;border-radius:16px;margin-bottom:12px;overflow:hidden;background:var(--card2)}
+  .week .head{padding:14px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .week .head:hover{background:#272a52}
+  .week .head .t{font-weight:700}
+  .week .body{padding:0 16px;max-height:0;overflow:hidden;transition:max-height .35s ease,padding .35s ease}
+  .week.open .body{max-height:2600px;padding:4px 16px 18px}
+  .week .phase{font-size:12px;color:var(--muted)}
+  .sub{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:680px){.sub{grid-template-columns:1fr}}
+  .block{background:#1a1c39;border:1px solid #313466;border-radius:14px;padding:14px}
+  .block h4{margin:0 0 10px;font-size:14px;display:flex;align-items:center;gap:8px}
+  .meal{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px dashed #2e3160}
+  .meal:last-child{border-bottom:none}
+  .meal .ico{font-size:22px;width:30px;text-align:center}
+  .meal .txt b{font-size:14px}.meal .txt span{display:block;color:var(--muted);font-size:12.5px}
+  .ex{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px dashed #2e3160;font-size:13.5px}
+  .ex:last-child{border-bottom:none}.ex .reps{color:var(--accent2);font-weight:700;white-space:nowrap}
+  .note{background:rgba(255,176,32,.1);border:1px solid rgba(255,176,32,.4);border-radius:12px;padding:12px 14px;font-size:13px;color:#ffe1ab;margin:14px 0}
+  .note.med{background:rgba(124,92,255,.12);border-color:rgba(124,92,255,.45);color:#d8ccff}
+  .foodgrid{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .chip{background:#23264d;border:1px solid #34386d;border-radius:999px;padding:5px 10px;font-size:12px}
+  .btn{display:inline-block;width:100%;margin-top:16px;padding:14px;border:none;border-radius:13px;background:linear-gradient(135deg,var(--accent),#9a7bff);color:#fff;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 8px 22px rgba(124,92,255,.45)}
+  .btn:hover{filter:brightness(1.08)}
+  .btn.alt{background:linear-gradient(135deg,#2c2f5e,#23254a);box-shadow:none;border:1px solid #3a3d6e}
+  .milestone{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#15324a,#16403a);border:1px solid #2a5a52;border-radius:14px;padding:12px 14px;margin-bottom:10px}
+  .milestone .b{font-size:26px}
+  .foot{text-align:center;color:var(--muted);font-size:12.5px;margin-top:26px;line-height:1.6}
+  .disclaimer{background:rgba(255,93,108,.1);border:1px solid rgba(255,93,108,.4);color:#ffc7cd;border-radius:12px;padding:12px 14px;font-size:12.5px;margin-top:16px}
+  .toplevel{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+  .badge{background:#23264d;border:1px solid #34386d;border-radius:999px;padding:5px 12px;font-size:12px;color:var(--muted)}
+  .hidden{display:none}
+  .confetti{position:fixed;top:-10px;width:10px;height:14px;z-index:999;pointer-events:none;border-radius:2px}
+</style>
+</head>
+<body>
+<header>
+  <h1>👻 Phantom FitPlan</h1>
+  <p>Your interactive, doctor-aware weight-loss & exercise program — built around <b>your</b> body, schedule & local food.</p>
+  <div class="toplevel">
+    <span class="badge">🎯 Pick 4 / 8 / 12 / 16 weeks</span>
+    <span class="badge">🍽️ Local-food diet</span>
+    <span class="badge">🏋️ Progressive workouts</span>
+    <span class="badge">💉 GLP-1 / Ozempic aware</span>
+  </div>
+</header>
+
+<div class="wrap">
+<div class="grid">
+
+  <!-- ===== INPUT PANEL ===== -->
+  <div class="card" style="align-self:start;position:sticky;top:16px">
+    <h2>⚙️ Your Details</h2>
+
+    <label>Name</label>
+    <input id="name" type="text" value="Ehsan" />
+
+    <div class="row">
+      <div><label>Age</label><input id="age" type="number" value="32" min="14" max="90"/></div>
+      <div><label>Sex</label>
+        <select id="sex"><option value="male">Male</option><option value="female">Female</option></select>
+      </div>
+    </div>
+
+    <label>Units</label>
+    <div class="seg" id="unitSeg">
+      <button data-u="metric" class="active">Metric (cm/kg)</button>
+      <button data-u="imperial">Imperial (in/lb)</button>
+    </div>
+
+    <div class="row">
+      <div><label id="hLab">Height (cm)</label><input id="height" type="number" value="175"/></div>
+      <div><label id="wLab">Weight (kg)</label><input id="weight" type="number" value="92"/></div>
+    </div>
+    <label id="gLab">Goal weight (kg) — optional</label>
+    <input id="goal" type="number" value="78"/>
+
+    <label>Activity level (outside workouts)</label>
+    <select id="activity">
+      <option value="1.2">Sedentary — desk job, little walking</option>
+      <option value="1.375" selected>Light — on feet some / 1–2 walks</option>
+      <option value="1.55">Moderate — active job or 3–4 walks</option>
+      <option value="1.725">High — very active job / on feet all day</option>
+      <option value="1.9">Athlete — intense training daily</option>
+    </select>
+
+    <label>Where do you live? (for local foods)</label>
+    <select id="region">
+      <option value="mideast">Middle East / Türkiye</option>
+      <option value="southasia">South Asia (India/Pakistan/Bangladesh)</option>
+      <option value="eastasia">East / SE Asia</option>
+      <option value="europe">Europe</option>
+      <option value="namerica">North America</option>
+      <option value="latam">Latin America</option>
+      <option value="africa">Sub-Saharan Africa</option>
+      <option value="generic" selected>No preference / mix</option>
+    </select>
+
+    <label>Diet style</label>
+    <select id="diet">
+      <option value="omni" selected>Omnivore (everything)</option>
+      <option value="noPork">No pork (halal/kosher-friendly)</option>
+      <option value="pesc">Pescatarian (fish, no meat)</option>
+      <option value="veg">Vegetarian</option>
+      <option value="vegan">Vegan</option>
+    </select>
+
+    <label>Medical / medication notes</label>
+    <select id="med">
+      <option value="ozempic" selected>On Ozempic / GLP-1</option>
+      <option value="none">None</option>
+      <option value="diabetes">Type 2 diabetes</option>
+      <option value="hypertension">High blood pressure</option>
+      <option value="thyroid">Thyroid condition</option>
+    </select>
+
+    <label>Workout setting</label>
+    <div class="seg" id="gymSeg">
+      <button data-g="gym" class="active">Gym</button>
+      <button data-g="home">Home</button>
+      <button data-g="mixed">Mixed</button>
+    </div>
+
+    <label>Days you can train / week</label>
+    <select id="days">
+      <option value="3">3 days</option>
+      <option value="4" selected>4 days</option>
+      <option value="5">5 days</option>
+      <option value="6">6 days</option>
+    </select>
+
+    <label>Pace (how aggressive)</label>
+    <select id="pace">
+      <option value="0.10">Gentle (~0.5%/wk) — easiest to sustain</option>
+      <option value="0.18" selected>Steady (~0.75%/wk) — recommended</option>
+      <option value="0.25">Faster (~1%/wk) — needs discipline</option>
+    </select>
+
+    <button class="btn" onclick="generate(true)">✨ Build My Plan</button>
+    <button class="btn alt" onclick="window.print()">🖨️ Save / Print plan</button>
+  </div>
+
+  <!-- ===== OUTPUT PANEL ===== -->
+  <div>
+    <div class="card">
+      <h2 id="hello">📊 Your Numbers</h2>
+      <div class="stat-grid" id="stats"></div>
+      <div class="charts">
+        <div class="chartbox"><h3>📉 Projected weight</h3><canvas id="cWeight" height="170"></canvas></div>
+        <div class="chartbox"><h3>🥗 Daily macros</h3><canvas id="cMacro" height="170"></canvas></div>
+      </div>
+      <div class="chartbox"><h3>🔥 Calories: maintenance vs your target</h3><canvas id="cCal" height="120"></canvas></div>
+      <div id="medNote"></div>
+      <div class="disclaimer">⚕️ <b>Important:</b> This is educational guidance, not medical advice. Because you may be on a GLP-1 medication (Ozempic) or have a medical condition, review this plan with your prescribing doctor or a registered dietitian before starting — especially calorie targets and any big change. Stop and seek help if you feel faint, very nauseous, or unwell.</div>
+    </div>
+
+    <div class="card" style="margin-top:22px">
+      <h2>🗓️ Your <span id="planLenLabel">8</span>-Week Program</h2>
+      <p style="color:var(--muted);margin:0 0 6px;font-size:13px">Choose your commitment — everything recalculates instantly:</p>
+      <div class="seg" id="planSeg">
+        <button data-p="4">4 weeks</button>
+        <button data-p="8" class="active">8 weeks</button>
+        <button data-p="12">12 weeks</button>
+        <button data-p="16">16 weeks</button>
+      </div>
+
+      <div id="milestones" style="margin-top:16px"></div>
+
+      <div class="tabs" id="viewTabs">
+        <button data-v="both" class="active">🍽️ + 🏋️ Full plan</button>
+        <button data-v="diet">🍽️ Diet only</button>
+        <button data-v="train">🏋️ Training only</button>
+      </div>
+
+      <div id="weeks"></div>
+    </div>
+
+    <div class="card" style="margin-top:22px">
+      <h2>🛒 Your Local Shopping List</h2>
+      <p style="color:var(--muted);margin:0 0 4px;font-size:13px">Protein-first staples available where you live:</p>
+      <div id="shopping"></div>
+    </div>
+  </div>
+</div>
+
+<div class="foot">
+  Built by <b>Phantom 👻</b> — Browser Automation Agent · Calculations use the Mifflin–St Jeor equation.<br/>
+  Weights, foods & workouts adapt live to your inputs. Re-open this link anytime; your last inputs are saved on this device.
+</div>
+</div>
+
+<script>
+/* ---------------- DATA ---------------- */
+const REGION_FOODS = {
+  mideast:{label:"Middle East / Türkiye",
+    protein:["Chicken & turkey","Eggs","Labneh / strained yogurt","White cheese (beyaz peynir)","Lentils & chickpeas","Köfte (lean)","Fish (hamsi, levrek)","Tuna"],
+    carb:["Bulgur","Brown rice","Whole-grain pide","Sweet potato","Freekeh","Oats"],
+    veg:["Cucumber & tomato salad","Spinach","Eggplant (grilled)","Peppers","Okra","Zucchini"],
+    fruit:["Apricots","Pomegranate","Figs","Oranges","Melon"],
+    snack:["Yogurt + walnuts","Hummus + veg","Handful of pistachios","Boiled egg"]},
+  southasia:{label:"South Asia",
+    protein:["Chicken curry (light oil)","Eggs","Paneer","Dal (lentils)","Chana (chickpeas)","Fish curry","Greek yogurt / dahi"],
+    carb:["Brown rice","Roti (whole wheat)","Oats","Sweet potato","Millet (bajra/ragi)"],
+    veg:["Palak (spinach)","Bhindi (okra)","Lauki","Mixed sabzi","Cucumber raita"],
+    fruit:["Guava","Papaya","Banana","Orange","Apple"],
+    snack:["Roasted chana","Dahi","Boiled egg","Sprouts chaat"]},
+  eastasia:{label:"East / SE Asia",
+    protein:["Chicken breast","Tofu & tempeh","Eggs","Edamame","Fish & seafood","Lean pork","Steamed prawns"],
+    carb:["Brown/Jasmine rice","Rice noodles","Sweet potato","Oats"],
+    veg:["Bok choy","Broccoli","Stir-fry greens","Mushrooms","Seaweed salad"],
+    fruit:["Orange","Dragon fruit","Papaya","Pineapple"],
+    snack:["Edamame","Miso soup","Boiled egg","Greek yogurt"]},
+  europe:{label:"Europe",
+    protein:["Chicken & turkey","Eggs","Greek yogurt","Cottage cheese","Lentils & beans","Salmon / mackerel","Tuna"],
+    carb:["Oats","Whole-grain bread/rye","Potatoes","Brown rice","Quinoa"],
+    veg:["Salad greens","Broccoli","Spinach","Tomatoes","Courgette","Carrots"],
+    fruit:["Apples","Berries","Oranges","Pears"],
+    snack:["Skyr / yogurt","Nuts","Boiled egg","Veg + hummus"]},
+  namerica:{label:"North America",
+    protein:["Chicken breast","Eggs / egg whites","Greek yogurt","Cottage cheese","Lean beef","Salmon / tuna","Beans & lentils"],
+    carb:["Oats","Sweet potato","Brown rice","Whole-grain bread","Quinoa"],
+    veg:["Spinach","Broccoli","Bell peppers","Salad mix","Green beans"],
+    fruit:["Apples","Berries","Bananas","Oranges"],
+    snack:["Greek yogurt","Almonds","Beef jerky (low sugar)","Protein shake"]},
+  latam:{label:"Latin America",
+    protein:["Chicken","Eggs","Black beans","Lentils","Fish","Lean beef","Queso fresco"],
+    carb:["Brown rice","Corn tortilla","Sweet potato / yuca (moderate)","Oats","Quinoa"],
+    veg:["Tomato & onion","Nopales","Spinach","Peppers","Avocado (moderate)"],
+    fruit:["Papaya","Mango (moderate)","Orange","Guava"],
+    snack:["Greek yogurt","Boiled egg","Roasted chickpeas","Jicama sticks"]},
+  africa:{label:"Sub-Saharan Africa",
+    protein:["Chicken","Eggs","Beans & cowpeas","Lentils","Fish (tilapia)","Lean beef","Groundnuts (moderate)"],
+    carb:["Brown rice","Millet/sorghum","Sweet potato","Plantain (moderate)","Oats"],
+    veg:["Spinach/efo","Okra","Tomato stew base","Cabbage","Greens"],
+    fruit:["Banana","Pawpaw","Orange","Mango (moderate)"],
+    snack:["Boiled egg","Roasted groundnuts","Yogurt","Fruit"]},
+  generic:{label:"Mixed",
+    protein:["Chicken / turkey","Eggs","Greek yogurt","Fish & tuna","Beans & lentils","Tofu","Cottage cheese"],
+    carb:["Oats","Brown rice","Potato / sweet potato","Whole-grain bread","Quinoa"],
+    veg:["Leafy greens","Broccoli","Peppers","Tomato & cucumber","Carrots"],
+    fruit:["Apple","Berries","Orange","Banana"],
+    snack:["Greek yogurt","Nuts (small handful)","Boiled egg","Veg + hummus"]}
+};
+
+const GYM = {
+  gym:{
+    A:["Chest press machine — 3×10","Seated row — 3×10","Lat pulldown — 3×12","Shoulder press — 3×10","Cable triceps — 3×12","Biceps curl — 3×12"],
+    B:["Leg press — 3×12","Goblet/DB squat — 3×10","Leg curl — 3×12","Walking lunges — 3×10/leg","Calf raise — 3×15","Plank — 3×40s"],
+    C:["Romanian deadlift — 3×10","Incline DB press — 3×10","Assisted pull-up — 3×8","DB shoulder press — 3×12","Hanging/lying leg raise — 3×12","Farmer carry — 3×30s"]
+  },
+  home:{
+    A:["Push-ups (knees ok) — 3×10","Backpack rows — 3×12","Pike push-ups — 3×8","Floor triceps dips — 3×12","Superman hold — 3×30s","Plank — 3×40s"],
+    B:["Bodyweight squats — 3×15","Reverse lunges — 3×10/leg","Glute bridge — 3×15","Wall sit — 3×40s","Calf raises — 3×20","Side plank — 3×25s/side"],
+    C:["Squat→press (backpack) — 3×12","Push-ups — 3×max","Bent rows — 3×12","Step-ups (stairs) — 3×12/leg","Mountain climbers — 3×30s","Dead bug — 3×12"]
+  },
+  mixed:{
+    A:["DB/backpack chest press — 3×10","One-arm rows — 3×10/side","Pike or shoulder press — 3×10","Triceps dips — 3×12","Curls — 3×12","Plank — 3×40s"],
+    B:["Goblet squats — 3×12","Lunges — 3×10/leg","RDL (DB/backpack) — 3×10","Glute bridge — 3×15","Calf raise — 3×18","Side plank — 3×25s"],
+    C:["Squat→press — 3×12","Push-ups — 3×max","Rows — 3×12","Step-ups — 3×12/leg","Leg raises — 3×12","Farmer carry — 3×30s"]
+  }
+};
+
+const ICONS={breakfast:"🍳",lunch:"🥗",snack:"🍎",dinner:"🐟"};
+
+/* ---------------- STATE ---------------- */
+let planLen=8, view="both", unit="metric", gym="gym";
+let charts={};
+
+function $(id){return document.getElementById(id);}
+function num(id){return parseFloat($(id).value)||0;}
+
+/* segmented buttons */
+document.querySelectorAll('#unitSeg button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#unitSeg button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); switchUnits(b.dataset.u);
+});
+document.querySelectorAll('#gymSeg button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#gymSeg button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); gym=b.dataset.g; generate(false);
+});
+document.querySelectorAll('#planSeg button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#planSeg button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); planLen=+b.dataset.p; generate(false);
+});
+document.querySelectorAll('#viewTabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#viewTabs button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); view=b.dataset.v; renderWeeks();
+});
+['name','age','sex','height','weight','goal','activity','region','diet','med','days','pace']
+  .forEach(id=>$(id).addEventListener('input',()=>generate(false)));
+
+function switchUnits(u){
+  if(u===unit) return;
+  const h=num('height'), w=num('weight'), g=num('goal');
+  if(u==='imperial'){
+    $('height').value=Math.round(h/2.54); $('weight').value=Math.round(w*2.205); $('goal').value=g?Math.round(g*2.205):'';
+    $('hLab').textContent='Height (in)';$('wLab').textContent='Weight (lb)';$('gLab').textContent='Goal weight (lb) — optional';
+  }else{
+    $('height').value=Math.round(h*2.54); $('weight').value=Math.round(w/2.205); $('goal').value=g?Math.round(g/2.205):'';
+    $('hLab').textContent='Height (cm)';$('wLab').textContent='Weight (kg)';$('gLab').textContent='Goal weight (kg) — optional';
+  }
+  unit=u; generate(false);
+}
+
+/* ---------------- CALC ---------------- */
+function metrics(){
+  let h=num('height'), w=num('weight'), g=num('goal'), age=num('age'), sex=$('sex').value, act=parseFloat($('activity').value);
+  if(unit==='imperial'){ h=h*2.54; w=w/2.205; g=g?g/2.205:0; }
+  const bmr=Math.round(10*w+6.25*h-5*age+(sex==='male'?5:-161));
+  const tdee=Math.round(bmr*act);
+  const pace=parseFloat($('pace').value);
+  // deficit = pace-based, capped to safe range
+  let deficit=Math.round(tdee*pace);
+  deficit=Math.min(deficit, 1000);                 // never more than 1000 kcal/day
+  let target=tdee-deficit;
+  const floor = sex==='male'?1500:1200;            // protein-safe floor
+  if(target<floor){ target=floor; deficit=tdee-floor; }
+  const bmi=h>0? (w/Math.pow(h/100,2)) : 0;
+  // macros — GLP-1 users get higher protein to protect muscle
+  const med=$('med').value;
+  const proteinPerKg = med==='ozempic'?2.0:1.8;
+  const protein=Math.round(proteinPerKg*w);
+  const fat=Math.round(0.8*w);
+  const carbs=Math.max(40, Math.round((target-(protein*4+fat*9))/4));
+  const kgPerWeek = (deficit*7)/7700;              // 7700 kcal ≈ 1 kg fat
+  return {h,w,g,age,sex,bmr,tdee,deficit,target,bmi,protein,fat,carbs,kgPerWeek,med};
+}
+
+function fmtW(kg){ return unit==='imperial'? (kg*2.205).toFixed(1)+' lb' : kg.toFixed(1)+' kg'; }
+
+/* ---------------- RENDER ---------------- */
+function renderStats(m){
+  const bmiCat = m.bmi<18.5?'Underweight':m.bmi<25?'Healthy':m.bmi<30?'Overweight':'Obese';
+  const bmiColor = m.bmi<25?'var(--ok)':m.bmi<30?'var(--warn)':'var(--danger)';
+  $('stats').innerHTML=`
+    <div class="stat"><div class="n">${m.tdee}</div><div class="l">Maintenance kcal/day</div></div>
+    <div class="stat"><div class="n" style="color:var(--accent2)">${m.target}</div><div class="l">Your target kcal/day</div></div>
+    <div class="stat"><div class="n">${m.protein}g</div><div class="l">Protein/day 💪</div></div>
+    <div class="stat"><div class="n" style="color:${bmiColor}">${m.bmi.toFixed(1)}</div><div class="l">BMI · ${bmiCat}</div></div>
+    <div class="stat"><div class="n">${fmtW(m.kgPerWeek)}</div><div class="l">Projected loss/week</div></div>`;
+  $('hello').textContent=`📊 ${$('name').value||'Your'}'s Numbers`;
+}
+
+function renderMedNote(m){
+  let html='';
+  if(m.med==='ozempic'){
+    html=`<div class="note med">💉 <b>On Ozempic / GLP-1 — read this:</b> Your appetite is suppressed, so the real risk is eating <b>too little protein</b> and losing muscle. Targets above keep protein high (${m.protein}g). Eat protein <i>first</i> at every meal even when not hungry, sip water all day (2.5–3L), and add fibre to avoid constipation. Nausea? Smaller, slower meals; avoid greasy/fried food. Never skip meals entirely. Coordinate dose changes with your doctor.</div>`;
+  } else if(m.med==='diabetes'){
+    html=`<div class="note med">🩸 <b>Type 2 diabetes:</b> Favour low-glycaemic carbs (oats, beans, whole grains), pair carbs with protein, and monitor your glucose. Confirm calorie/carb targets with your care team.</div>`;
+  } else if(m.med==='hypertension'){
+    html=`<div class="note med">❤️ <b>High blood pressure:</b> Keep sodium modest (limit processed/salty foods), prioritise potassium-rich veg & fruit, and ease into cardio. Check with your doctor on intensity.</div>`;
+  } else if(m.med==='thyroid'){
+    html=`<div class="note med">🦋 <b>Thyroid condition:</b> Weight loss can be slower — be patient and consistent. Keep meds timing consistent and review targets with your doctor.</div>`;
+  }
+  $('medNote').innerHTML=html;
+}
+
+function renderMilestones(m){
+  const total=m.kgPerWeek*planLen;
+  const goalTxt = m.g? `Goal: ${fmtW(m.g)}` : 'No goal set';
+  const reach = (m.g && m.kgPerWeek>0)? Math.ceil((m.w-m.g)/m.kgPerWeek):0;
+  let reachMsg = m.g? (reach<=planLen? `🎉 At this pace you could hit your goal in ~${reach} weeks — inside this plan!`
+                    : `📅 At this pace you'd reach goal in ~${reach} weeks (a longer plan or slightly faster pace gets you there).`) : '';
+  $('milestones').innerHTML=`
+    <div class="milestone"><div class="b">📉</div><div><b>${fmtW(total)} projected loss</b> over ${planLen} weeks · ${goalTxt}</div></div>
+    <div class="milestone"><div class="b">🏆</div><div>Halfway check-in: <b>Week ${Math.round(planLen/2)}</b> — expect ~${fmtW(total/2)} down & noticeably more energy.</div></div>
+    ${reachMsg?`<div class="milestone"><div class="b">⭐</div><div>${reachMsg}</div></div>`:''}`;
+}
+
+function dietForWeek(m,wk){
+  const f=REGION_FOODS[$('region').value];
+  const diet=$('diet').value;
+  const pf = arr=>{
+    let p=[...arr];
+    if(diet==='veg'||diet==='vegan') p=p.filter(x=>!/chicken|turkey|beef|fish|tuna|pork|köfte|prawn|seafood|mackerel|salmon|tilapia|jerky/i.test(x));
+    if(diet==='pesc') p=p.filter(x=>!/chicken|turkey|beef|pork|köfte|jerky/i.test(x));
+    if(diet==='noPork') p=p.filter(x=>!/pork/i.test(x));
+    if(diet==='vegan') p=p.filter(x=>!/egg|yogurt|cheese|paneer|labneh|dahi|skyr|paneer|paneer|queso|cottage|paneer/i.test(x));
+    return p.length?p:["Plant protein (tofu/lentils/beans)"];
+  };
+  const prot=pf(f.protein), snk=pf(f.snack);
+  const pick=(a,i)=>a[(wk+i)%a.length];
+  const portion = m.med==='ozempic'? 'small, protein-first portion':'balanced portion';
+  return [
+    {ico:ICONS.breakfast,t:"Breakfast",d:`${pick(prot,0)} + ${pick(f.carb,0)} + ${pick(f.fruit,0)} · ${portion}`},
+    {ico:ICONS.lunch,t:"Lunch",d:`${pick(prot,1)} (palm-size) + big ${pick(f.veg,0)} + 1 fist ${pick(f.carb,1)}`},
+    {ico:ICONS.snack,t:"Snack",d:`${pick(snk,0)} — hit protein even if not very hungry`},
+    {ico:ICONS.dinner,t:"Dinner (lighter)",d:`${pick(prot,2)} + half-plate ${pick(f.veg,1)} · go easy on carbs`}
+  ];
+}
+
+function trainForWeek(wk){
+  const block=GYM[gym];
+  const d=+$('days').value;
+  // rotate A/B/C; choose number of sessions = days
+  const order=['A','B','C','A','B','C'];
+  const sessions=[];
+  for(let i=0;i<d;i++){ sessions.push(order[(wk+i)%order.length]); }
+  const prog = wk<2?'Foundation — focus on form':wk<5?'Add 1 rep or small weight each set':wk<9?'Push intensity — last set near-tough':'Peak — challenge yourself, keep form clean';
+  const cardio = `${Math.min(20+wk*2,40)} min brisk walk on most days + ${wk>3?'1–2 faster cardio sessions':'gentle pace while you build the habit'}`;
+  return {sessions,prog,cardio,block};
+}
+
+function renderWeeks(){
+  const m=metrics();
+  const box=$('weeks'); box.innerHTML='';
+  for(let wk=0; wk<planLen; wk++){
+    const proj=m.w - m.kgPerWeek*(wk+1);
+    const diet=dietForWeek(m,wk);
+    const tr=trainForWeek(wk);
+    const dietHTML=diet.map(x=>`<div class="meal"><div class="ico">${x.ico}</div><div class="txt"><b>${x.t}</b><span>${x.d}</span></div></div>`).join('');
+    const seen={};
+    const trHTML=tr.sessions.map((s,i)=>{
+      seen[s]=(seen[s]||0)+1;
+      const exs=tr.block[s].map(e=>{const p=e.split('—');return `<div class="ex"><span>${p[0].trim()}</span><span class="reps">${(p[1]||'').trim()}</span></div>`}).join('');
+      return `<div style="margin-bottom:10px"><b style="font-size:13px">Day ${i+1} · Workout ${s}${seen[s]>1?' (round '+seen[s]+')':''}</b>${exs}</div>`;
+    }).join('');
+    const dietBlock=`<div class="block"><h4>🍽️ Eating — ~${m.target} kcal · ${m.protein}g protein</h4>${dietHTML}</div>`;
+    const trainBlock=`<div class="block"><h4>🏋️ Training — ${tr.sessions.length} days</h4><div class="phase" style="margin-bottom:8px">📈 ${tr.prog} · 🚶 ${tr.cardio}</div>${trHTML}</div>`;
+    let inner='';
+    if(view==='both') inner=`<div class="sub">${dietBlock}${trainBlock}</div>`;
+    else if(view==='diet') inner=dietBlock;
+    else inner=trainBlock;
+    const phaseName = wk<Math.ceil(planLen*0.25)?'🌱 Adapt':wk<Math.ceil(planLen*0.6)?'🔥 Build':wk<planLen-1?'💪 Push':'🏁 Finish strong';
+    const el=document.createElement('div');
+    el.className='week'+(wk===0?' open':'');
+    el.innerHTML=`<div class="head"><div><div class="t">Week ${wk+1} · <span class="phase">${phaseName}</span></div></div>
+      <div style="text-align:right"><span class="pill" style="background:rgba(34,211,166,.15);color:var(--ok)">~${fmtW(Math.max(proj,m.g||0))}</span></div></div>
+      <div class="body">${inner}</div>`;
+    el.querySelector('.head').onclick=()=>el.classList.toggle('open');
+    box.appendChild(el);
+  }
+}
+
+function renderShopping(){
+  const f=REGION_FOODS[$('region').value];
+  const cats=[['💪 Protein','protein'],['🌾 Smart carbs','carb'],['🥦 Veg','veg'],['🍓 Fruit','fruit'],['🥨 Snacks','snack']];
+  $('shopping').innerHTML=cats.map(([lab,k])=>
+    `<div style="margin-top:10px"><b style="font-size:13px">${lab}</b><div class="foodgrid">${f[k].map(x=>`<span class="chip">${x}</span>`).join('')}</div></div>`).join('');
+}
+
+function renderCharts(m){
+  const labels=Array.from({length:planLen+1},(_,i)=>'W'+i);
+  const proj=labels.map((_,i)=>+(Math.max(m.w-m.kgPerWeek*i, m.g||0)).toFixed(1));
+  const cv=v=>unit==='imperial'?+(v*2.205).toFixed(1):v;
+  const projU=proj.map(cv);
+  const goalLine=m.g? labels.map(()=>cv(m.g)):null;
+  Object.values(charts).forEach(c=>c&&c.destroy());
+  Chart.defaults.color='#a6a9c8'; Chart.defaults.font.family="Segoe UI";
+  charts.w=new Chart($('cWeight'),{type:'line',data:{labels,datasets:[
+    {label:'Projected ('+(unit==='imperial'?'lb':'kg')+')',data:projU,borderColor:'#22d3a6',backgroundColor:'rgba(34,211,166,.15)',fill:true,tension:.3,pointRadius:2},
+    ...(goalLine?[{label:'Goal',data:goalLine,borderColor:'#7c5cff',borderDash:[6,6],pointRadius:0,fill:false}]:[])
+  ]},options:{plugins:{legend:{display:true,labels:{boxWidth:12}}},scales:{y:{grid:{color:'#2a2c52'}},x:{grid:{display:false}}}}});
+  const pC=m.protein*4,fC=m.fat*9,cC=m.carbs*4;
+  charts.m=new Chart($('cMacro'),{type:'doughnut',data:{labels:[`Protein ${m.protein}g`,`Carbs ${m.carbs}g`,`Fat ${m.fat}g`],
+    datasets:[{data:[pC,cC,fC],backgroundColor:['#22d3a6','#7c5cff','#ffb020'],borderColor:'#23254a',borderWidth:2}]},
+    options:{plugins:{legend:{position:'bottom',labels:{boxWidth:12,padding:10}}}}});
+  charts.c=new Chart($('cCal'),{type:'bar',data:{labels:['Maintenance','Your target','Deficit'],
+    datasets:[{data:[m.tdee,m.target,m.deficit],backgroundColor:['#3a3d6e','#22d3a6','#ff5d6c'],borderRadius:8}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'#2a2c52'}},y:{grid:{display:false}}}}});
+}
+
+function confetti(){
+  const colors=['#7c5cff','#22d3a6','#ffb020','#ff5d6c','#fff'];
+  for(let i=0;i<60;i++){
+    const c=document.createElement('div');c.className='confetti';
+    c.style.left=Math.random()*100+'vw';c.style.background=colors[i%colors.length];
+    c.style.transform='rotate('+Math.random()*360+'deg)';
+    document.body.appendChild(c);
+    const dur=1500+Math.random()*1500;
+    c.animate([{top:'-10px',opacity:1},{top:'100vh',opacity:.9}],{duration:dur,easing:'cubic-bezier(.2,.6,.4,1)'});
+    setTimeout(()=>c.remove(),dur);
+  }
+}
+
+/* ---------------- MAIN ---------------- */
+function generate(celebrate){
+  const m=metrics();
+  $('planLenLabel').textContent=planLen;
+  renderStats(m); renderMedNote(m); renderMilestones(m);
+  renderWeeks(); renderShopping(); renderCharts(m);
+  saveState();
+  if(celebrate) confetti();
+}
+
+function saveState(){
+  const ids=['name','age','sex','height','weight','goal','activity','region','diet','med','days','pace'];
+  const s={planLen,unit,gym}; ids.forEach(i=>s[i]=$(i).value);
+  try{localStorage.setItem('phantomFit',JSON.stringify(s));}catch(e){}
+}
+function loadState(){
+  try{
+    const s=JSON.parse(localStorage.getItem('phantomFit')||'null'); if(!s)return;
+    ['name','age','sex','height','weight','goal','activity','region','diet','med','days','pace'].forEach(i=>{if(s[i]!=null)$(i).value=s[i];});
+    if(s.unit){unit=s.unit;document.querySelectorAll('#unitSeg button').forEach(b=>b.classList.toggle('active',b.dataset.u===unit));
+      if(unit==='imperial'){$('hLab').textContent='Height (in)';$('wLab').textContent='Weight (lb)';$('gLab').textContent='Goal weight (lb) — optional';}}
+    if(s.gym){gym=s.gym;document.querySelectorAll('#gymSeg button').forEach(b=>b.classList.toggle('active',b.dataset.g===gym));}
+    if(s.planLen){planLen=+s.planLen;document.querySelectorAll('#planSeg button').forEach(b=>b.classList.toggle('active',+b.dataset.p===planLen));}
+  }catch(e){}
+}
+
+loadState();
+generate(false);
+</script>
+</body>
+</html>
